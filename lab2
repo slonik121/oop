@@ -1,0 +1,208 @@
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+// Enum для типів послуг
+enum ServiceType {
+    OIL_CHANGE("Заміна оливи з фільтром"),
+    BRAKE_PAD_CHANGE("Заміна гальмівних колодок"),
+    BATTERY_CHANGE("Заміна акумулятора"),
+    TRANSMISSION_REPAIR("Ремонт трансмісії"),
+    SHOCK_ABSORBER_CHANGE("Заміна амортизаторів"),
+    EXHAUST_SYSTEM_REPAIR("Ремонт або заміна вихлопної системи"),
+    TIRE_CHANGE("Заміна шин");
+
+    private final String displayName;
+
+    ServiceType(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+}
+
+// Базовий клас для транспортних засобів
+abstract class Vehicle {
+    private String name;
+    private Map<ServiceType, Integer> priceMap;
+    private Map<ServiceType, String> timeMap;
+
+    public Vehicle(String name, Map<ServiceType, Integer> priceMap, Map<ServiceType, String> timeMap) {
+        this.name = name;
+        this.priceMap = priceMap;
+        this.timeMap = timeMap;
+    }
+
+    public int getBasePrice(ServiceType serviceType) {
+        return priceMap.getOrDefault(serviceType, 0);
+    }
+
+    public String getServiceTime(ServiceType serviceType) {
+        return timeMap.getOrDefault(serviceType, "0 хв");
+    }
+
+    // Загальний метод для створення мапи цін та часу виконання послуг
+    protected static Map<ServiceType, Integer> createPriceMap(int oilChange, int brakePadChange, int batteryChange,
+                                                              int transmissionRepair, int shockAbsorberChange,
+                                                              int exhaustSystemRepair, int tireChange) {
+        Map<ServiceType, Integer> prices = new HashMap<>();
+        prices.put(ServiceType.OIL_CHANGE, oilChange);
+        prices.put(ServiceType.BRAKE_PAD_CHANGE, brakePadChange);
+        prices.put(ServiceType.BATTERY_CHANGE, batteryChange);
+        prices.put(ServiceType.TRANSMISSION_REPAIR, transmissionRepair);
+        prices.put(ServiceType.SHOCK_ABSORBER_CHANGE, shockAbsorberChange);
+        prices.put(ServiceType.EXHAUST_SYSTEM_REPAIR, exhaustSystemRepair);
+        prices.put(ServiceType.TIRE_CHANGE, tireChange);
+        return prices;
+    }
+
+    protected static Map<ServiceType, String> createTimeMap(String oilChange, String brakePadChange, String batteryChange,
+                                                            String transmissionRepair, String shockAbsorberChange,
+                                                            String exhaustSystemRepair, String tireChange) {
+        Map<ServiceType, String> times = new HashMap<>();
+        times.put(ServiceType.OIL_CHANGE, oilChange);
+        times.put(ServiceType.BRAKE_PAD_CHANGE, brakePadChange);
+        times.put(ServiceType.BATTERY_CHANGE, batteryChange);
+        times.put(ServiceType.TRANSMISSION_REPAIR, transmissionRepair);
+        times.put(ServiceType.SHOCK_ABSORBER_CHANGE, shockAbsorberChange);
+        times.put(ServiceType.EXHAUST_SYSTEM_REPAIR, exhaustSystemRepair);
+        times.put(ServiceType.TIRE_CHANGE, tireChange);
+        return times;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
+// Клас для автомобілів
+class Car extends Vehicle {
+    public Car(String name) {
+        super(name, createPriceMap(1000, 2000, 3000, 5000, 4000, 2400, 600),
+                createTimeMap("45 хв", "50 хв", "60 хв", "80 хв", "76 хв", "25 хв", "15 хв"));
+    }
+}
+
+// Клас для мотоциклів
+class Motorcycle extends Vehicle {
+    public Motorcycle(String name) {
+        super(name, createPriceMap(800, 1500, 2000, 4000, 3000, 1800, 500),
+                createTimeMap("30 хв", "40 хв", "50 хв", "70 хв", "60 хв", "20 хв", "10 хв"));
+    }
+}
+
+// Клас для вантажівок
+class Truck extends Vehicle {
+    public Truck(String name) {
+        super(name, createPriceMap(1200, 2500, 3500, 6000, 4500, 3000, 800),
+                createTimeMap("50 хв", "60 хв", "70 хв", "90 хв", "80 хв", "30 хв", "20 хв"));
+    }
+}
+
+// Основний клас для GUI
+public class AutoWorkshopGUI {
+    private final JFrame frame = new JFrame("Автомобільна Майстерня");
+    private final JTextField nameField = new JTextField(20);
+    private final JComboBox<String> vehicleTypeComboBox = new JComboBox<>(new String[]{"Автомобіль", "Мотоцикл", "Вантажівка"});
+    private final List<JCheckBox> serviceCheckBoxes = List.of(
+            new JCheckBox(ServiceType.OIL_CHANGE.getDisplayName()),
+            new JCheckBox(ServiceType.BRAKE_PAD_CHANGE.getDisplayName()),
+            new JCheckBox(ServiceType.BATTERY_CHANGE.getDisplayName()),
+            new JCheckBox(ServiceType.TRANSMISSION_REPAIR.getDisplayName()),
+            new JCheckBox(ServiceType.SHOCK_ABSORBER_CHANGE.getDisplayName()),
+            new JCheckBox(ServiceType.EXHAUST_SYSTEM_REPAIR.getDisplayName()),
+            new JCheckBox(ServiceType.TIRE_CHANGE.getDisplayName())
+    );
+    private final JTextArea outputArea = new JTextArea(15, 40);
+    private final List<Vehicle> queue = new ArrayList<>();
+
+    public AutoWorkshopGUI() {
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 600);
+        frame.setLayout(new FlowLayout());
+
+        outputArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(outputArea);
+
+        JButton processButton = new JButton("Виконати");
+        processButton.addActionListener(e -> processService());
+
+        frame.add(new JLabel("Назва транспортного засобу:"));
+        frame.add(nameField);
+        frame.add(new JLabel("Тип транспортного засобу:"));
+        frame.add(vehicleTypeComboBox);
+        serviceCheckBoxes.forEach(frame::add);
+        frame.add(processButton);
+        frame.add(scrollPane);
+        frame.setVisible(true);
+    }
+
+    // Метод для обробки послуг
+    private void processService() {
+        Vehicle vehicle = createVehicle(nameField.getText(), (String) vehicleTypeComboBox.getSelectedItem());
+        if (vehicle == null) {
+            outputArea.append("Невідомий тип транспортного засобу.\n");
+            return;
+        }
+
+        queue.add(vehicle);
+
+        StringBuilder serviceDetails = new StringBuilder("Обрані послуги:\n");
+        int totalPrice = 0;
+        int totalTime = 0;
+
+        // Обробляємо кожну послугу через окремий метод
+        for (JCheckBox checkBox : serviceCheckBoxes) {
+            if (checkBox.isSelected()) { // Додаємо перевірку на вибір послуги
+                totalPrice += addServiceDetails(vehicle, checkBox, serviceDetails);
+                totalTime += Integer.parseInt(vehicle.getServiceTime(getServiceType(checkBox.getText())).replace(" хв", ""));
+            }
+        }
+
+        serviceDetails.append("Загальний час: ").append(totalTime).append(" хвилин.\n")
+                .append("Загальна сума до оплати: ").append(totalPrice).append(" грн.\n");
+
+        outputArea.append(serviceDetails.toString());
+    }
+
+    // Метод для обробки окремої послуги
+    private int addServiceDetails(Vehicle vehicle, JCheckBox checkBox, StringBuilder serviceDetails) {
+        if (checkBox.isSelected()) {
+            ServiceType service = getServiceType(checkBox.getText());
+            int price = vehicle.getBasePrice(service);
+            serviceDetails.append(service.getDisplayName()).append(": ").append(vehicle.getServiceTime(service)).append("\n");
+            return price;
+        }
+        return 0;
+    }
+
+    // Метод для отримання ServiceType з рядка
+    private ServiceType getServiceType(String serviceName) {
+        for (ServiceType service : ServiceType.values()) {
+            if (service.getDisplayName().equals(serviceName)) {
+                return service;
+            }
+        }
+        return null; // або можете кинути виняток
+    }
+
+    // Створення транспортного засобу на основі вибору
+    private Vehicle createVehicle(String name, String vehicleType) {
+        return switch (vehicleType) {
+            case "Автомобіль" -> new Car(name);
+            case "Мотоцикл" -> new Motorcycle(name);
+            case "Вантажівка" -> new Truck(name);
+            default -> null;
+        };
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(AutoWorkshopGUI::new);
+    }
+}
+
