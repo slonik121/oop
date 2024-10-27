@@ -1,0 +1,108 @@
+import java.util.*;
+
+// Основний клас AutoShop для роботи з користувачем
+public class AutoShop {
+    // Список доступних транспортних засобів
+    private static final List<Vehicle> vehicles = List.of(new Car(), new Motorcycle(), new Truck());
+
+    // Список доступних послуг
+    private static final List<Service> services = List.of(
+            new Service("Oil change with filter"),
+            new Service("Brake pad replacement"),
+            new Service("Battery replacement"),
+            new Service("Tire replacement")
+    );
+
+    public static void main(String[] args) {
+        try (Scanner scanner = new Scanner(System.in)) {
+            Vehicle selectedVehicle = chooseVehicle(scanner);
+            if (selectedVehicle == null) return;
+
+            List<Service> selectedServices = chooseServices(scanner);
+            if (selectedServices.isEmpty()) return;
+
+            displayServiceSummary(selectedVehicle, selectedServices);
+        }
+    }
+
+    // Метод для вибору типу транспортного засобу
+    private static Vehicle chooseVehicle(Scanner scanner) {
+        System.out.println("Select a vehicle type:");
+        for (int i = 0; i < vehicles.size(); i++) {
+            System.out.println((i + 1) + ". " + vehicles.get(i).getType());
+        }
+
+        try {
+            int choice = Integer.parseInt(scanner.nextLine()) - 1;
+            if (choice >= 0 && choice < vehicles.size()) {
+                Vehicle selectedVehicle = vehicles.get(choice);
+                System.out.println("Selected vehicle: " + selectedVehicle.getType());
+                return selectedVehicle;
+            } else {
+                System.out.println("Invalid vehicle type.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input. Please enter a valid number.");
+        }
+        return null;
+    }
+
+    // Метод для вибору послуг
+    private static List<Service> chooseServices(Scanner scanner) {
+        System.out.println("Select services, separated by commas:");
+        for (int i = 0; i < services.size(); i++) {
+            System.out.println((i + 1) + ". " + services.get(i).getName());
+        }
+
+        String[] selectedServiceIndexes = scanner.nextLine().split(",");
+        List<Service> selectedServices = new ArrayList<>();
+
+        for (String s : selectedServiceIndexes) {
+            try {
+                int index = Integer.parseInt(s.trim()) - 1;
+                if (index >= 0 && index < services.size()) {
+                    selectedServices.add(services.get(index));
+                } else {
+                    System.out.println("Invalid service selection: " + (index + 1));
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid service input: " + s.trim());
+            }
+        }
+
+        if (selectedServices.isEmpty()) {
+            System.out.println("No valid services selected.");
+        }
+        return selectedServices;
+    }
+
+    // Метод для розрахунку загальної вартості та часу
+    private static int[] calculateTotalCostAndTime(Vehicle vehicle, List<Service> services) {
+        int totalPrice = 0;
+        int totalTime = 0;
+
+        for (Service service : services) {
+            totalPrice += vehicle.getServicePrice(service);
+            totalTime += vehicle.getServiceTime(service);
+        }
+        return new int[]{totalPrice, totalTime};
+    }
+
+    // Метод для відображення зведення обраних послуг, загальної вартості та часу
+    private static void displayServiceSummary(Vehicle selectedVehicle, List<Service> selectedServices) {
+        StringBuilder serviceDetails = new StringBuilder("Selected services:\n");
+
+        for (Service service : selectedServices) {
+            int price = selectedVehicle.getServicePrice(service);
+            int time = selectedVehicle.getServiceTime(service);
+            serviceDetails.append(service.getName()).append(" - ").append(time)
+                    .append(" min, ").append(price).append(" UAH\n");
+        }
+
+        int[] totalCostAndTime = calculateTotalCostAndTime(selectedVehicle, selectedServices);
+        serviceDetails.append("Total time: ").append(totalCostAndTime[1]).append(" minutes\n")
+                .append("Total cost: ").append(totalCostAndTime[0]).append(" UAH");
+
+        System.out.println(serviceDetails.toString());
+    }
+}
